@@ -1,0 +1,13 @@
+IaCScan Report
+============================================================
+[CRITICAL] tests/lab2/main.tf:6  aws_security_group.rdp
+    Issue: Ports 3389-3389 poori internet (0.0.0.0/0) ke liye open hain
+    Fix:   cidr_blocks mein sirf apna specific IP ya private range rakho
+
+[CRITICAL] tests/lab2/main.tf:12  aws_s3_bucket.logs
+    Issue: Bucket public hai (acl = "public-read-write")
+    Fix:   acl = "private" karo
+
+============================================================
+Total findings: 2
+  CRITICAL: 2
