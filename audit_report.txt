@@ -1,0 +1,42 @@
+IaCScan Report
+============================================================
+[CRITICAL] tests/lab1/iam.tf:6  aws_iam_policy.broad
+    Issue: Action = "*" aur Resource = "*" (poora admin access)
+    Fix:   Sirf zaroori actions aur specific resources do (least privilege)
+
+[CRITICAL] tests/lab1/network/sg.tf:6  aws_security_group.web
+    Issue: Ports 22-22 poori internet (0.0.0.0/0) ke liye open hain
+    Fix:   cidr_blocks mein sirf apna specific IP ya private range rakho
+
+[CRITICAL] tests/lab2/main.tf:6  aws_security_group.rdp
+    Issue: Ports 3389-3389 poori internet (0.0.0.0/0) ke liye open hain
+    Fix:   cidr_blocks mein sirf apna specific IP ya private range rakho
+
+[CRITICAL] tests/lab2/main.tf:12  aws_s3_bucket.logs
+    Issue: Bucket public hai (acl = "public-read-write")
+    Fix:   acl = "private" karo
+
+[HIGH] tests/lab1/main.tf:3  aws_s3_bucket.data
+    Issue: Bucket public hai (acl = "public-read")
+    Fix:   acl = "private" karo
+
+[HIGH] tests/lab1/storage.tf:1  aws_ebs_volume.bad_disk
+    Issue: encrypted set nahi hai, storage encrypted nahi hai
+    Fix:   encrypted = true likho
+
+[HIGH] tests/lab1/storage.tf:12  aws_s3_bucket.public_one
+    Issue: Bucket public hai (acl = "public-read")
+    Fix:   acl = "private" karo
+
+[HIGH] tests/lab1/storage.tf:22  aws_db_instance.bad_db
+    Issue: storage_encrypted = false, storage encrypted nahi hai
+    Fix:   storage_encrypted = true karo
+
+[HIGH] tests/lab1/storage.tf:23  aws_db_instance.bad_db
+    Issue: Database internet se accessible hai
+    Fix:   publicly_accessible = false karo
+
+============================================================
+Total findings: 9
+  CRITICAL: 4
+  HIGH: 5
