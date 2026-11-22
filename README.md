@@ -39,3 +39,7 @@ This is a learning project. The parser reads the common Terraform layout line by
 ## Lab use only
 
 Run IaCScan only on files you own or have written permission to scan. The test files in tests/ are written by me for this purpose.
+
+## JSON output (for pipelines)
+
+    python3 iacscan.py tests/lab1 --format json -o report1.json

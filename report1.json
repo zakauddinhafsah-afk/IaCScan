@@ -1,0 +1,65 @@
+{
+  "total": 7,
+  "summary": {
+    "CRITICAL": 2,
+    "HIGH": 5
+  },
+  "findings": [
+    {
+      "file": "tests/lab1/iam.tf",
+      "line": 6,
+      "severity": "CRITICAL",
+      "resource": "aws_iam_policy.broad",
+      "issue": "Action = \"*\" aur Resource = \"*\" (poora admin access)",
+      "fix": "Sirf zaroori actions aur specific resources do (least privilege)"
+    },
+    {
+      "file": "tests/lab1/network/sg.tf",
+      "line": 6,
+      "severity": "CRITICAL",
+      "resource": "aws_security_group.web",
+      "issue": "Ports 22-22 poori internet (0.0.0.0/0) ke liye open hain",
+      "fix": "cidr_blocks mein sirf apna specific IP ya private range rakho"
+    },
+    {
+      "file": "tests/lab1/main.tf",
+      "line": 3,
+      "severity": "HIGH",
+      "resource": "aws_s3_bucket.data",
+      "issue": "Bucket public hai (acl = \"public-read\")",
+      "fix": "acl = \"private\" karo"
+    },
+    {
+      "file": "tests/lab1/storage.tf",
+      "line": 1,
+      "severity": "HIGH",
+      "resource": "aws_ebs_volume.bad_disk",
+      "issue": "encrypted set nahi hai, storage encrypted nahi hai",
+      "fix": "encrypted = true likho"
+    },
+    {
+      "file": "tests/lab1/storage.tf",
+      "line": 12,
+      "severity": "HIGH",
+      "resource": "aws_s3_bucket.public_one",
+      "issue": "Bucket public hai (acl = \"public-read\")",
+      "fix": "acl = \"private\" karo"
+    },
+    {
+      "file": "tests/lab1/storage.tf",
+      "line": 22,
+      "severity": "HIGH",
+      "resource": "aws_db_instance.bad_db",
+      "issue": "storage_encrypted = false, storage encrypted nahi hai",
+      "fix": "storage_encrypted = true karo"
+    },
+    {
+      "file": "tests/lab1/storage.tf",
+      "line": 23,
+      "severity": "HIGH",
+      "resource": "aws_db_instance.bad_db",
+      "issue": "Database internet se accessible hai",
+      "fix": "publicly_accessible = false karo"
+    }
+  ]
+}
