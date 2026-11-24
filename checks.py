@@ -97,8 +97,8 @@ def run_checks(resource):
     findings += check_encryption(resource)
     findings += check_public_exposure(resource)
     findings += check_identity(resource)
+    findings += check_secrets(resource)
     return findings
-
 
 # ---------- IAM Identity Security Check ----------
 
@@ -168,6 +168,52 @@ def check_identity(resource):
             resource_name(resource),
             'Resource = "*" (all resources allowed)',
             "Specify the required resource ARN"
+        ))
+
+    return findings
+# ---------- Hardcoded Secrets Detection ----------
+
+SECRET_KEYWORDS = (
+    "password",
+    "secret",
+    "api_key",
+    "access_key",
+    "private_key",
+    "client_secret",
+    "token",
+)
+
+def check_secrets(resource):
+    findings = []
+
+    for key, (value, line) in resource["attrs"].items():
+        key_lower = key.lower()
+
+        if not any(word in key_lower for word in SECRET_KEYWORDS):
+            continue
+
+        if not isinstance(value, str):
+            continue
+
+        value = value.strip()
+
+        if not value:
+            continue
+
+       
+        if value.startswith(("var.", "local.", "env.")) or "${" in value:
+            continue
+
+        if value.lower() in ("null", "none", "changeme", "example"):
+            continue
+
+        findings.append(make_finding(
+            resource["file"],
+            line,
+            "CRITICAL",
+            resource_name(resource),
+            "Possible hardcoded secret detected in attribute: " + key,
+            "Move the secret to a secure secret manager or protected variable"
         ))
 
     return findings

@@ -1,3 +1,4 @@
+
 # IaCScan
 
 IaCScan is a Python-based command-line security scanner for Infrastructure as Code (IaC). It scans Terraform (.tf) files and identifies common security misconfigurations before deployment.
@@ -7,6 +8,7 @@ IaCScan is a Python-based command-line security scanner for Infrastructure as Co
 - Recursively scans Terraform files.
 - Parses Terraform resources and attributes using Python HCL2.
 - Detects security misconfigurations.
+- Detects possible hardcoded secrets in Terraform resource attributes.
 - Reports severity levels: CRITICAL, HIGH, MEDIUM, and LOW.
 - Displays file names and line numbers.
 - Generates text and JSON reports.
@@ -19,6 +21,7 @@ IaCScan is a Python-based command-line security scanner for Infrastructure as Co
 | Storage without encryption | aws_ebs_volume, aws_db_instance | HIGH |
 | Publicly exposed storage | aws_s3_bucket, aws_db_instance | HIGH |
 | Overly broad IAM permissions | aws_iam_policy, aws_iam_role_policy, aws_iam_user_policy | CRITICAL / HIGH / MEDIUM |
+| Possible hardcoded secrets | Sensitive resource attributes | CRITICAL |
 
 ## Requirements
 
@@ -47,6 +50,7 @@ Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
+
 ## Usage
 
 Scan a folder:
@@ -71,6 +75,12 @@ Run automated tests:
 python -m pytest -v
 ```
 
+The test suite includes checks for:
+- Scanner execution.
+- Hardcoded password detection.
+- Ignoring variable-based passwords.
+- Preventing secret values from appearing in findings.
+
 ## Project Structure
 
 - `iacscan.py` — CLI entry point and report generation.
@@ -82,7 +92,7 @@ python -m pytest -v
 
 ## Limitations
 
-IaCScan is an educational project. It does not fully evaluate Terraform variables, module references, or complex expressions. Some complex IAM policies may not be detected by its current pattern-based checks. Line-number accuracy for nested block attributes may also be limited.
+IaCScan is an educational project. It does not fully evaluate Terraform variables, module references, or complex expressions. Some complex IAM policies may not be detected by its current pattern-based checks. Line-number accuracy for nested block attributes may also be limited. Secret detection is based on sensitive attribute names and may produce false positives.
 
 ## Lab Use Only
 
