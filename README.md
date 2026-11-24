@@ -1,4 +1,7 @@
-
+![Python](https://img.shields.io/badge/Python-3.13-blue)
+![Terraform](https://img.shields.io/badge/Terraform-IaC-purple)
+![Security](https://img.shields.io/badge/Focus-Cloud%20Security-red)
+![Tests](https://img.shields.io/badge/Tests-4%20Passed-brightgreen)
 # IaCScan
 
 IaCScan is a Python-based command-line security scanner for Infrastructure as Code (IaC). It scans Terraform (.tf) files and identifies common security misconfigurations before deployment.
