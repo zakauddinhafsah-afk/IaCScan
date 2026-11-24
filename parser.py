@@ -1,66 +1,116 @@
+
+import hcl2
+import json
 import re
 
-# Pattern: resource "TYPE" "NAME" {
-RESOURCE_START = re.compile(r'^\s*resource\s+"(.+?)"\s+"(.+?)"\s*\{')
-# Pattern: ingress {   (nested block ki shuruaat)
-NESTED_START = re.compile(r'^\s*(\w+)\s*\{')
-# Pattern: key = value
-ATTRIBUTE = re.compile(r'^\s*(\w+)\s*=\s*(.+?)\s*$')
 
 def clean_value(value):
-    # Quotes hata do: "public-read" -> public-read
-    return value.strip().strip('"')
+    if isinstance(value, bool):
+        return str(value).lower()
+
+    if isinstance(value, str):
+        if value.startswith('"') and value.endswith('"'):
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                return value[1:-1]
+
+    if isinstance(value, (int, float)):
+        return str(value)
+
+    return value
+
+
+def find_resource_line(lines, resource_type, resource_name):
+    pattern = re.compile(
+        r'^\s*resource\s+["\']'
+        + re.escape(resource_type)
+        + r'["\']\s+["\']'
+        + re.escape(resource_name)
+        + r'["\']'
+    )
+
+    for number, line in enumerate(lines, start=1):
+        if pattern.search(line):
+            return number
+
+    return 1
+
+
+def find_attribute_line(lines, key, start_line):
+    pattern = re.compile(
+        r'^\s*' + re.escape(key) + r'\s*='
+    )
+
+    for number in range(start_line, len(lines) + 1):
+        if pattern.search(lines[number - 1]):
+            return number
+
+    return start_line
+
 
 def parse_file(path):
     resources = []
-    with open(path) as f:
-        lines = f.readlines()
 
-    current = None   # abhi kaunsa resource parh rahe hain
-    nested = None    # abhi kaunsa nested block (ingress wagaira)
-    depth = 0        # brace depth
+    with open(path, "r", encoding="utf-8") as file:
+        source = file.read()
 
-    for line_no, line in enumerate(lines, start=1):
-        if current is None:
-            match = RESOURCE_START.match(line)
-            if match:
-                current = {
-                    "type": match.group(1),
-                    "name": match.group(2),
+    lines = source.splitlines()
+    data = hcl2.loads(source)
+
+    for resource_group in data.get("resource", []):
+        for resource_type, instances in resource_group.items():
+
+            resource_type = clean_value(resource_type)
+
+            for resource_name, config in instances.items():
+                resource_name = clean_value(resource_name)
+
+                resource_line = find_resource_line(
+                    lines, resource_type, resource_name
+                )
+
+                resource = {
+                    "type": resource_type,
+                    "name": resource_name,
                     "file": str(path),
-                    "line": line_no,
+                    "line": resource_line,
                     "attrs": {},
-                    "blocks": [],
+                    "blocks": []
                 }
-                depth = 1
-            continue
 
-        # Nested block shuru hua? (sirf resource ke seedhe andar)
-        nested_match = NESTED_START.match(line)
-        if nested_match and nested is None and depth == 1:
-            nested = {"kind": nested_match.group(1), "line": line_no, "attrs": {}}
+                for key, value in config.items():
+                    if key == "__is_block__":
+                        continue
 
-        # Attribute dhoondo
-        attr = ATTRIBUTE.match(line)
-        if attr:
-            target = nested["attrs"] if nested else current["attrs"]
-            target[attr.group(1)] = (clean_value(attr.group(2)), line_no)
+                    if isinstance(value, list):
+                        for item in value:
+                            if isinstance(item, dict):
+                                block_attrs = {
+                                    k: (
+                                        clean_value(v),
+                                        resource_line
+                                    )
+                                    for k, v in item.items()
+                                    if k != "__is_block__"
+                                }
 
-        # Brace depth update karo
-        depth += line.count("{") - line.count("}")
+                                resource["blocks"].append({
+                                    "kind": key,
+                                    "line": resource_line,
+                                    "attrs": block_attrs
+                                })
 
-        # Nested block khatam hua? (depth wapas 1 par aa gaya)
-        if nested is not None and depth == 1:
-            current["blocks"].append(nested)
-            nested = None
+                    else:
+                        attr_line = find_attribute_line(
+                            lines, key, resource_line
+                        )
 
-        # Resource khatam hua?
-        if depth == 0:
-            resources.append(current)
-            current = None
+                        resource["attrs"][key] = (
+                            clean_value(value),
+                            attr_line
+                        )
+
+                resources.append(resource)
 
     return resources
-
-if __name__ == "__main__":
-    for r in parse_file("tests/lab1/network/sg.tf"):
-        print(r)

@@ -1,3 +1,4 @@
+import re
 from parser import parse_file
 
 MANAGEMENT_PORTS = {22, 3389}
@@ -98,66 +99,75 @@ def run_checks(resource):
     findings += check_identity(resource)
     return findings
 
-# ---------- Step 5: identity ----------
 
-IAM_TYPES = ("aws_iam_policy", "aws_iam_role_policy", "aws_iam_user_policy")
+# ---------- IAM Identity Security Check ----------
 
-def check_identity(resource):
-    if resource["type"] not in IAM_TYPES:
-        return []
-    attrs = resource["attrs"]
-    action = attrs.get("Action", ("", 0))
-    res = attrs.get("Resource", ("", 0))
-    all_actions = action[0] == "*"
-    all_resources = res[0] == "*"
-    if all_actions and all_resources:
-        return [make_finding(
-            resource["file"], action[1], "CRITICAL", resource_name(resource),
-            'Action = "*" aur Resource = "*" (poora admin access)',
-            "Sirf zaroori actions aur specific resources do (least privilege)",
-        )]
-    if all_actions:
-        return [make_finding(
-            resource["file"], action[1], "HIGH", resource_name(resource),
-            'Action = "*" (har action ki ijazat)',
-            "Specific actions likho, jaise s3:GetObject",
-        )]
-    if all_resources:
-        return [make_finding(
-            resource["file"], res[1], "MEDIUM", resource_name(resource),
-            'Resource = "*" (har resource par ijazat)',
-            "Specific resource ARN do",
-        )]
-    return []
+IAM_TYPES = (
+    "aws_iam_policy",
+    "aws_iam_role_policy",
+    "aws_iam_user_policy"
+)
 
-# ---------- Step 5: identity ----------
-
-IAM_TYPES = ("aws_iam_policy", "aws_iam_role_policy", "aws_iam_user_policy")
 
 def check_identity(resource):
     if resource["type"] not in IAM_TYPES:
         return []
-    attrs = resource["attrs"]
-    action = attrs.get("Action", ("", 0))
-    res = attrs.get("Resource", ("", 0))
-    all_actions = action[0] == "*"
-    all_resources = res[0] == "*"
+
+    policy = resource["attrs"].get("policy", ("", 0))[0]
+
+    if not isinstance(policy, str):
+        policy = str(policy)
+
+    findings = []
+
+    actions = re.findall(
+        r'Action\s*=\s*(\[[^\]]*\]|"[^"]*")',
+        policy
+    )
+
+    resources = re.findall(
+        r'Resource\s*=\s*(\[[^\]]*\]|"[^"]*")',
+        policy
+    )
+
+    all_actions = any(
+        "*" in re.findall(r'"([^"]*)"', value)
+        for value in actions
+    )
+
+    all_resources = any(
+        "*" in re.findall(r'"([^"]*)"', value)
+        for value in resources
+    )
+
     if all_actions and all_resources:
-        return [make_finding(
-            resource["file"], action[1], "CRITICAL", resource_name(resource),
-            'Action = "*" aur Resource = "*" (poora admin access)',
-            "Sirf zaroori actions aur specific resources do (least privilege)",
-        )]
-    if all_actions:
-        return [make_finding(
-            resource["file"], action[1], "HIGH", resource_name(resource),
-            'Action = "*" (har action ki ijazat)',
-            "Specific actions likho, jaise s3:GetObject",
-        )]
-    if all_resources:
-        return [make_finding(
-            resource["file"], res[1], "MEDIUM", resource_name(resource),
-            'Resource = "*" (har resource par ijazat)',
-            "Specific resource ARN do",
-        )]
-    return []
+        findings.append(make_finding(
+            resource["file"],
+            resource["line"],
+            "CRITICAL",
+            resource_name(resource),
+            'Action = "*" and Resource = "*" (overly broad permissions)',
+            "Apply least privilege: specify required actions and resource ARNs"
+        ))
+
+    elif all_actions:
+        findings.append(make_finding(
+            resource["file"],
+            resource["line"],
+            "HIGH",
+            resource_name(resource),
+            'Action = "*" (all actions allowed)',
+            "Specify only the required IAM actions"
+        ))
+
+    elif all_resources:
+        findings.append(make_finding(
+            resource["file"],
+            resource["line"],
+            "MEDIUM",
+            resource_name(resource),
+            'Resource = "*" (all resources allowed)',
+            "Specify the required resource ARN"
+        ))
+
+    return findings

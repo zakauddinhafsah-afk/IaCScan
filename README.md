@@ -1,45 +1,90 @@
 # IaCScan
 
-A command-line Infrastructure-as-Code security scanner written in Python.
-It reads Terraform (.tf) files and finds misconfigurations before they are deployed.
+IaCScan is a Python-based command-line security scanner for Infrastructure as Code (IaC). It scans Terraform (.tf) files and identifies common security misconfigurations before deployment.
 
-## What it checks
+## Features
 
-| Check | Resource types | Severity |
+- Recursively scans Terraform files.
+- Parses Terraform resources and attributes using Python HCL2.
+- Detects security misconfigurations.
+- Reports severity levels: CRITICAL, HIGH, MEDIUM, and LOW.
+- Displays file names and line numbers.
+- Generates text and JSON reports.
+
+## Security Checks
+
+| Security Check | Resource Types | Severity |
 |---|---|---|
-| Security group open to the internet (0.0.0.0/0, ::/0) | aws_security_group | CRITICAL for ports 22/3389, otherwise HIGH |
+| Open security group ingress | aws_security_group | CRITICAL / HIGH |
 | Storage without encryption | aws_ebs_volume, aws_db_instance | HIGH |
-| Publicly exposed storage | aws_s3_bucket, aws_db_instance | HIGH / CRITICAL |
-| Overly broad IAM rights | aws_iam_policy, aws_iam_role_policy, aws_iam_user_policy | CRITICAL / HIGH / MEDIUM |
+| Publicly exposed storage | aws_s3_bucket, aws_db_instance | HIGH |
+| Overly broad IAM permissions | aws_iam_policy, aws_iam_role_policy, aws_iam_user_policy | CRITICAL / HIGH / MEDIUM |
 
-Every finding reports the file, line number, severity, the issue and a fix.
+## Requirements
 
-## How to run
+- Python 3
+- pip
+- Python virtual environment
 
-    python3 iacscan.py <folder> -o report.txt
+## Installation
 
-Example:
+Clone the repository:
 
-    python3 iacscan.py tests/lab1 -o report1.txt
+```bash
+git clone https://github.com/zakauddinhafsah-afk/IaCScan.git
+cd IaCScan
+```
 
-The folder is searched recursively for .tf files. The report is printed and saved to the output file.
+Create and activate a virtual environment:
 
-## Project layout
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
 
-- iacscan.py - command line entry point and report writer
-- scanner.py - finds .tf files in a folder (including nested folders)
-- parser.py - extracts resource blocks, attributes and line numbers
-- checks.py - the security checks
-- tests/ - lab-only test files with planted flaws
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Usage
+
+Scan a folder:
+
+```bash
+python iacscan.py tests -o report.txt
+```
+
+Generate a JSON report:
+
+```bash
+python iacscan.py tests --format json -o report.json
+```
+
+IaCScan searches recursively for Terraform files and displays detected findings in the terminal while saving the report.
+
+## Testing
+
+Run automated tests:
+
+```bash
+python -m pytest -v
+```
+
+## Project Structure
+
+- `iacscan.py` — CLI entry point and report generation.
+- `scanner.py` — Recursively discovers Terraform files.
+- `parser.py` — Parses Terraform resources and attributes.
+- `checks.py` — Contains security detection rules.
+- `tests/` — Terraform test fixtures and automated tests.
+- `requirements.txt` — Python dependencies.
 
 ## Limitations
 
-This is a learning project. The parser reads the common Terraform layout line by line. It does not evaluate variables, modules or expressions.
+IaCScan is an educational project. It does not fully evaluate Terraform variables, module references, or complex expressions. Some complex IAM policies may not be detected by its current pattern-based checks. Line-number accuracy for nested block attributes may also be limited.
 
-## Lab use only
+## Lab Use Only
 
-Run IaCScan only on files you own or have written permission to scan. The test files in tests/ are written by me for this purpose.
-
-## JSON output (for pipelines)
-
-    python3 iacscan.py tests/lab1 --format json -o report1.json
+Use IaCScan only on Terraform files you own or have permission to scan. The included test files are created for educational testing purposes.
