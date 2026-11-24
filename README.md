@@ -8,13 +8,14 @@ IaCScan is a Python-based command-line security scanner for Infrastructure as Co
 
 ## Features
 
-- Recursively scans Terraform files.
 - Parses Terraform resources and attributes using Python HCL2.
 - Detects security misconfigurations.
 - Detects possible hardcoded secrets in Terraform resource attributes.
 - Reports severity levels: CRITICAL, HIGH, MEDIUM, and LOW.
 - Displays file names and line numbers.
 - Generates text and JSON reports.
+- Recursively scans Terraform files.
+- Detects and scans local Terraform modules referenced by source paths.
 
 ## Security Checks
 

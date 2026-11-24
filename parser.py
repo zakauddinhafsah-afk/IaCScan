@@ -114,3 +114,20 @@ def parse_file(path):
                 resources.append(resource)
 
     return resources
+def parse_modules(path):
+    with open(path, "r", encoding="utf-8") as file:
+        source = file.read()
+
+    data = hcl2.loads(source)
+    modules = []
+
+    for module_group in data.get("module", []):
+        for module_name, config in module_group.items():
+            source = config.get("source")
+
+            if isinstance(source, str):
+                source = clean_value(source)
+                if source.startswith("./") or source.startswith("../"):
+                    modules.append(source)
+
+    return modules

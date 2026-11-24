@@ -67,3 +67,27 @@ def test_secret_value_not_exposed():
     findings = check_secrets(resource)
 
     assert secret not in str(findings)
+def test_local_module_detection(tmp_path):
+    from scanner import find_tf_files
+
+    project = tmp_path / "project"
+    module = project / "modules" / "network"
+
+    module.mkdir(parents=True)
+
+    root_file = project / "main.tf"
+    root_file.write_text(
+        'module "network" {\n'
+        '  source = "./modules/network"\n'
+        '}\n'
+    )
+
+    module_file = module / "network.tf"
+    module_file.write_text(
+        'resource "aws_security_group" "test" {}\n'
+    )
+
+    files = find_tf_files(project)
+
+    assert root_file.resolve() in files
+    assert module_file.resolve() in files
