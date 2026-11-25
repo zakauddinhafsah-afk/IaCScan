@@ -104,10 +104,8 @@ The test suite includes checks for:
 
 ## Limitations
 
-## Limitations
-
 IaCScan is an educational project. It supports literal relative local module paths (`./` and `../`), but does not fetch remote modules or fully evaluate dynamic module references, variables, or complex expressions. Some complex IAM policies may not be detected by its current pattern-based checks. Line-number accuracy for nested block attributes may also be limited. Secret detection is based on sensitive attribute names and may produce false positives.
 
 ## Lab Use Only
 
-IaCScan supports literal relative local module paths, but does not fetch remote modules or fully evaluate dynamic module references.
+Use IaCScan only on Terraform files you own or have permission to scan. The included test files are created for educational testing purposes only.
