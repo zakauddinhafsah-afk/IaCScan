@@ -90,11 +90,13 @@ The test suite includes checks for:
 - Hardcoded password detection.
 - Ignoring variable-based passwords.
 - Preventing secret values from appearing in findings.
+- Local Terraform module detection.
+**Latest test result: 5 passed.**
 
 ## Project Structure
 
 - `iacscan.py` — CLI entry point and report generation.
-- `scanner.py` — Recursively discovers Terraform files.
+- `scanner.py` — Recursively discovers Terraform files and referenced local modules.
 - `parser.py` — Parses Terraform resources and attributes.
 - `checks.py` — Contains security detection rules.
 - `tests/` — Terraform test fixtures and automated tests.
@@ -102,7 +104,9 @@ The test suite includes checks for:
 
 ## Limitations
 
-IaCScan is an educational project. It does not fully evaluate Terraform variables, module references, or complex expressions. Some complex IAM policies may not be detected by its current pattern-based checks. Line-number accuracy for nested block attributes may also be limited. Secret detection is based on sensitive attribute names and may produce false positives.
+## Limitations
+
+IaCScan is an educational project. It supports literal relative local module paths (`./` and `../`), but does not fetch remote modules or fully evaluate dynamic module references, variables, or complex expressions. Some complex IAM policies may not be detected by its current pattern-based checks. Line-number accuracy for nested block attributes may also be limited. Secret detection is based on sensitive attribute names and may produce false positives.
 
 ## Lab Use Only
 
